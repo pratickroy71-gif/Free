@@ -1,47 +1,42 @@
 import discord
 from discord.ext import commands
 import os
-import requests
+import google.generativeai as genai
 
+# Load API keys
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Configure Gemini
+genai.configure(api_key=GEMINI_API_KEY)
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 intents = discord.Intents.default()
 intents.message_content = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-API = "https://api.affiliateplus.xyz/api/chatbot"
-
-def get_ai_reply(username, message):
+def get_ai_reply(message, username):
     try:
-        params = {
-            "message": message,
-            "ownername": "Foxy PlayzZ",
-            "botname": "Foxy",
-            "user": username
-        }
-
-        response = requests.get(API, params=params, timeout=10)
-        data = response.json()
-
-        if "message" in data:
-            return data["message"]
-
+        response = model.generate_content(
+            f"Tum Foxy naam ka Discord bot ho. Hindi me reply karo. User: {username}\nMessage: {message}"
+        )
+        return response.text
     except Exception as e:
-        print("AI Error:", e)
-
-    # fallback reply
-    return "Namaste! Main Foxy hoon 😊 Kaise madad kar sakta hoon?"
+        print(e)
+        return "AI reply unavailable."
 
 @bot.event
 async def on_ready():
-    print(f"✅ Foxy FREE AI Online: {bot.user}")
+    print(f"✅ Foxy Gemini AI Online: {bot.user}")
 
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    reply = get_ai_reply(message.author.name, message.content)
+    reply = get_ai_reply(message.content, message.author.name)
     await message.reply(reply)
 
 bot.run(DISCORD_TOKEN)
