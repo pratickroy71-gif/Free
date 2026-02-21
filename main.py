@@ -15,25 +15,27 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"✅ Foxy Gemini Online: {bot.user}")
+    print(f"✅ Foxy Gemini Ultimate Online: {bot.user}")
+
+def ask_gemini(username, message):
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=f"Tum Foxy naam ka Discord bot ho. Hindi me reply karo.\nUser: {username}\nMessage: {message}"
+        )
+
+        return response.text
+
+    except Exception as e:
+        print("Gemini Error:", e)
+        return "⚠️ AI temporary unavailable hai."
 
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=f"Tum Foxy naam ka friendly Discord bot ho. Hindi me short reply karo.\nUser: {message.author.name}\nMessage: {message.content}"
-        )
-
-        reply = response.text
-
-    except Exception as e:
-        print(e)
-        reply = "Maaf kijiye, AI abhi unavailable hai."
-
+    reply = ask_gemini(message.author.name, message.content)
     await message.reply(reply)
 
 bot.run(DISCORD_TOKEN)
